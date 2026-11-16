@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From BOM to PO</title>
+<meta name="description" content="A technical buyer's sourcing sheet for a mobile robot built like Avular's Origin One: BOM, re-order rules, supply risk, NPI choices and savings. Simulated data, built for a Technical Buyer application.">
+<meta property="og:title" content="From BOM to PO. A sourcing sheet for an Avular mobile robot">
+<meta property="og:description" content="BOM, re-order rules from the build plan, supply risk radar, NPI break-even and a savings plan on one page. Simulated data.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://leonida300-gg.github.io/avular-technical-buying/">
+<meta property="og:image" content="https://leonida300-gg.github.io/avular-technical-buying/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f2ec; --paper-2:#ebe7dd; --card:#fbfaf7; --white:#ffffff;
+  --ink:#15171c; --ink-2:#434852; --muted:#737883; --line:#d3cec2; --line-2:#e4e0d6;
+  --grid:rgba(21,23,28,.045);
+  --accent:#e8530e; --accent-ink:#b8410b; --accent-bg:#fbe3d5;
+  --red:#c2302a; --red-bg:#f8e0dd;
+  --amber:#9a6700; --amber-bg:#f6ebcc;
+  --green:#2b7a4b; --green-bg:#dcefe3;
+  --blue:#2a62a6; --blue-bg:#dfe8f4;
+  --grey:#8b909a;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --disp:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px}
+a{color:inherit}
+button{font:inherit;color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+@media (max-width:640px){.wrap{padding:0 16px}}
+.mono{font-family:var(--mono)}
+.tnum{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top strip */
+.strip{background:var(--ink);color:#f4f2ec;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase}
+.strip .wrap{display:flex;justify-content:space-between;gap:16px;padding-top:8px;padding-bottom:8px;flex-wrap:wrap}
+.strip b{color:var(--accent);font-weight:500}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:40px;padding-top:48px;padding-bottom:32px;align-items:start}
+@media (max-width:980px){.hero{grid-template-columns:minmax(0,1fr);gap:28px;padding-top:32px}}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.eyebrow b{color:var(--accent-ink);font-weight:500}
+h1{font-family:var(--disp);font-size:clamp(52px,8vw,98px);line-height:.92;font-weight:700;letter-spacing:-.045em;margin:0}
+.dot{color:var(--accent)}
+.lede{font-size:18px;line-height:1.5;max-width:540px;margin:20px 0 0;color:var(--ink-2)}
+.lede strong{color:var(--ink);font-weight:600}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);padding:9px 16px;font-weight:600;font-size:14px;text-decoration:none;background:var(--ink);color:var(--paper);min-height:40px}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:focus-visible,.seg button:focus-visible,.row-btn:focus-visible,.balloon:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hero-note{margin-top:22px;font-size:13px;color:var(--muted);max-width:520px}
+
+/* drawing frame */
+.sheet{background:var(--card);border:1.5px solid var(--ink);position:relative}
+.sheet::before{content:"";position:absolute;inset:6px;border:1px solid var(--line);pointer-events:none}
+.sheet svg.robot{display:block;width:100%;height:auto;padding:14px 14px 0}
+.tblock{display:grid;grid-template-columns:repeat(4,1fr);border-top:1.5px solid var(--ink);position:relative;z-index:1;background:var(--card)}
+.tblock div{padding:8px 10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.tblock div:nth-child(4n){border-right:0}
+.tblock div:nth-last-child(-n+4){border-bottom:0}
+.tblock .wide{grid-column:span 2}
+.tblock span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.tblock b{display:block;font-family:var(--mono);font-size:12.5px;font-weight:500;margin-top:2px;overflow-wrap:anywhere}
+@media (max-width:560px){.tblock{grid-template-columns:repeat(2,1fr)}.tblock div:nth-child(2n){border-right:0}.tblock div:nth-child(4n){border-right:0}.tblock div:nth-last-child(-n+4){border-bottom:1px solid var(--line)}.tblock div:nth-last-child(-n+2){border-bottom:0}.tblock .wide{grid-column:span 2}}
+.balloon{cursor:pointer}
+.balloon circle{fill:var(--card);stroke:var(--ink);stroke-width:1.5;transition:fill .15s}
+.balloon text{font-family:var(--mono);font-size:12px;font-weight:600;fill:var(--ink);pointer-events:none}
+.balloon:hover circle,.balloon.on circle{fill:var(--accent);stroke:var(--accent)}
+.balloon:hover text,.balloon.on text{fill:#fff}
+.leader{stroke:var(--ink);stroke-width:1}
+
+/* controls */
+.controls{border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);background:rgba(244,242,236,.95);backdrop-filter:blur(6px);z-index:30}
+@media (min-width:900px){.controls{position:sticky;top:0}}
+.controls .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 28px;padding-top:10px;padding-bottom:10px}
+.cgroup{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.clabel{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;border:1.5px solid var(--ink);background:var(--card)}
+.seg button{background:none;border:0;padding:5px 12px;font-family:var(--mono);font-size:13px;font-weight:500;cursor:pointer;min-height:32px;min-width:40px}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:not([aria-pressed="true"]):hover{background:var(--paper-2)}
+.cnote{margin-left:auto;font-size:12.5px;color:var(--muted)}
+@media (max-width:900px){.cnote{margin-left:0;width:100%}}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);margin-top:28px;border:1.5px solid var(--ink);background:var(--card)}
+.kpi{padding:16px 18px;border-right:1px solid var(--line);min-width:0}
+.kpi:last-child{border-right:0}
+.k-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.k-value{font-family:var(--disp);font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.1;margin:8px 0 4px}
+.k-value small{font-size:15px;color:var(--ink-2);font-weight:500;margin-left:2px;letter-spacing:0}
+.k-sub{font-size:12.5px;color:var(--ink-2)}
+.kpi.alert .k-label::before{content:"";display:inline-block;width:7px;height:7px;background:var(--red);margin-right:6px;vertical-align:1px}
+@media (max-width:1040px){.kpis{grid-template-columns:repeat(3,1fr)}.kpi{border-bottom:1px solid var(--line)}.kpi:nth-child(3){border-right:0}.kpi:nth-child(n+4){border-bottom:0}}
+@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(3){border-right:1px solid var(--line)}.kpi:nth-child(2n){border-right:0}.kpi:nth-child(n+4){border-bottom:1px solid var(--line)}.kpi:last-child{grid-column:1/-1;border-bottom:0}.k-value{font-size:26px}}
+
+/* sections */
+.block{margin-top:72px;scroll-margin-top:72px}
+.bhead{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:end;margin-bottom:20px}
+.bnum{font-family:var(--mono);font-size:13px;color:var(--accent-ink);border:1.5px solid var(--accent);padding:2px 7px;align-self:center}
+h2{font-family:var(--disp);font-size:clamp(32px,4.4vw,48px);font-weight:700;letter-spacing:-.04em;line-height:1;margin:0}
+.bsub{grid-column:2;display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline;justify-content:space-between}
+.bsub p{margin:6px 0 0;max-width:660px;color:var(--ink-2)}
+.ask{font-size:12.5px;color:var(--ink-2);max-width:420px;border-left:3px solid var(--accent);padding:2px 0 2px 10px;margin-top:6px}
+.ask b{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);font-weight:500;display:block}
+@media (max-width:640px){.bhead{grid-template-columns:minmax(0,1fr)}.bsub{grid-column:1}.bnum{justify-self:start}}
+.card{background:var(--card);border:1.5px solid var(--ink)}
+.pad{padding:18px 20px}
+@media (max-width:640px){.pad{padding:14px}}
+.card-title{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+
+/* tables */
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 10px;border-bottom:1.5px solid var(--ink);white-space:nowrap;background:var(--card);position:sticky;top:0}
+td{padding:9px 10px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer;transition:background .1s}
+tbody tr:hover{background:var(--paper)}
+tbody tr.sel{background:var(--accent-bg)}
+tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.pn{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.pname{font-weight:600}
+.pspec{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
+#bom-table td,#bom-table th{padding-left:8px;padding-right:8px}
+.row-btn{all:unset;cursor:pointer}
+.chip{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:500;padding:2px 7px;white-space:nowrap;border:1px solid transparent}
+.c-red{background:var(--red-bg);color:var(--red)}
+.c-amber{background:var(--amber-bg);color:var(--amber)}
+.c-green{background:var(--green-bg);color:var(--green)}
+.c-blue{background:var(--blue-bg);color:var(--blue)}
+.c-grey{background:var(--paper-2);color:var(--ink-2)}
+.c-out{border-color:var(--line);color:var(--ink-2)}
+.cls{display:inline-grid;place-items:center;width:22px;height:22px;font-family:var(--mono);font-size:12px;font-weight:600;border:1.5px solid var(--ink)}
+.cls.A{background:var(--ink);color:var(--paper)}
+.cls.C{border-color:var(--line);color:var(--muted)}
+.sharebar{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.sharebar i{display:block;height:8px;background:var(--ink);min-width:2px}
+.sharebar span{min-width:64px;text-align:right}
+
+/* BOM layout */
+.bom-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+@media (max-width:1040px){.bom-grid{grid-template-columns:minmax(0,1fr)}}
+.detail{position:sticky;top:76px}
+@media (max-width:1040px){.detail{position:static}}
+.d-no{font-family:var(--mono);font-size:12px;color:var(--accent-ink)}
+.d-name{font-family:var(--disp);font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:4px 0 4px}
+.d-spec{font-size:13px;color:var(--muted);margin:0 0 12px}
+.d-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.d-facts{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);margin-bottom:14px}
+.d-facts div{padding:8px 10px;border-right:1px solid var(--line)}
+.d-facts div:last-child{border-right:0}
+.d-facts span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.d-facts b{font-family:var(--mono);font-size:14px;font-weight:600}
+.d-sec{margin-top:12px}
+.d-sec h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px;font-weight:500}
+.d-sec p{margin:0;font-size:14px}
+.abc{display:flex;gap:0;margin-top:12px;border:1px solid var(--line);font-size:12.5px}
+.abc div{padding:8px 10px;border-right:1px solid var(--line);flex:1}
+.abc div:last-child{border-right:0}
+.abc b{font-family:var(--mono)}
+
+/* policy cards */
+.policies{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+@media (max-width:900px){.policies{grid-template-columns:minmax(0,1fr)}}
+.pol h3{font-family:var(--disp);font-size:20px;font-weight:600;letter-spacing:-.02em;margin:6px 0 6px}
+.pol p{margin:0;font-size:14px;color:var(--ink-2)}
+.pol .who{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:10px}
+.cover{display:flex;align-items:center;gap:8px;min-width:150px}
+.cover .track{position:relative;flex:1;height:10px;background:var(--paper-2);min-width:90px}
+.cover .fill{position:absolute;left:0;top:0;bottom:0;background:var(--ink-2)}
+.cover .lt{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--accent)}
+.cover span{font-family:var(--mono);font-size:12px;min-width:38px;text-align:right}
+.tools{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1.5px solid var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:14px;height:8px;margin-right:6px;vertical-align:0}
+.legend i.lt{width:2px;height:12px;background:var(--accent);vertical-align:-2px}
+
+/* risk */
+.risk-grid{display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.risk-grid{grid-template-columns:minmax(0,1fr)}}
+.radar svg{display:block;width:100%;height:auto;max-width:460px;margin:0 auto}
+.rdot{cursor:pointer}
+.rdot circle{stroke:var(--ink);stroke-width:1.5;transition:r .12s}
+.rdot text{font-family:var(--mono);font-size:11px;font-weight:600;pointer-events:none}
+.rdot.on circle{stroke:var(--accent);stroke-width:3}
+.watch{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:760px){.watch{grid-template-columns:minmax(0,1fr)}}
+.wcard .when{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink)}
+.wcard h3{font-family:var(--disp);font-size:19px;font-weight:600;letter-spacing:-.02em;margin:6px 0 6px;line-height:1.2}
+.wcard p{margin:0 0 8px;font-size:14px;color:var(--ink-2)}
+.wcard .do{font-size:14px;color:var(--ink);border-top:1px dashed var(--line);padding-top:8px;margin-top:10px}
+.wcard .do b{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-right:6px}
+.wcard .src{font-size:12px;color:var(--muted);margin-top:8px}
+.wcard .src a{color:var(--muted)}
+.wcard .parts{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+/* NPI */
+.npi{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1040px){.npi{grid-template-columns:minmax(0,1fr)}}
+.be svg{display:block;width:100%;height:auto}
+.be .axis text{font-family:var(--mono);font-size:10.5px;fill:var(--muted)}
+.be .gridl{stroke:var(--line-2);stroke-width:1}
+.verdict{margin-top:12px;padding:12px 14px;background:var(--paper);border-left:3px solid var(--accent);font-size:14px}
+.verdict b{font-weight:600}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);margin-top:12px}
+.opts div{padding:8px 10px;border-right:1px solid var(--line);font-size:12.5px}
+.opts div:last-child{border-right:0}
+.opts b{display:block;font-weight:600;font-size:13px}
+.opts .sw{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:0}
+@media (max-width:560px){.opts{grid-template-columns:minmax(0,1fr)}.opts div{border-right:0;border-bottom:1px solid var(--line)}.opts div:last-child{border-bottom:0}}
+.score td{cursor:default}
+.score tbody tr{cursor:default}
+.score tbody tr:hover{background:transparent}
+.pips{display:inline-flex;gap:3px;vertical-align:middle}
+.pips i{width:9px;height:9px;border:1.5px solid var(--ink);display:block}
+.pips i.f{background:var(--ink)}
+.score tfoot td{border-top:1.5px solid var(--ink);font-weight:600;padding-top:10px}
+.score .win{background:var(--accent-bg)}
+.score .wt{font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+/* deal */
+.deal{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1040px){.deal{grid-template-columns:minmax(0,1fr)}}
+.lever{display:grid;grid-template-columns:minmax(0,1fr) 150px 84px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-2)}
+.lever:last-of-type{border-bottom:0}
+.lever .lt1{font-size:14px;font-weight:600}
+.lever .lt2{font-size:12.5px;color:var(--muted)}
+.lever .bar{height:12px;background:var(--paper-2);position:relative}
+.lever .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent)}
+.lever .bar i.avoid{background:repeating-linear-gradient(45deg,var(--grey),var(--grey) 3px,var(--paper-2) 3px,var(--paper-2) 6px)}
+.lever .v{font-family:var(--mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.lever .v.zero{color:var(--muted)}
+@media (max-width:560px){.lever{grid-template-columns:minmax(0,1fr) 84px}.lever .bar{grid-column:1/-1;grid-row:2}}
+.total{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline;border-top:1.5px solid var(--ink);margin-top:6px;padding-top:12px}
+.total .big{font-family:var(--disp);font-size:30px;font-weight:600;letter-spacing:-.03em}
+.target{height:14px;background:var(--paper-2);position:relative;margin-top:10px}
+.target i{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
+.target b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--accent)}
+.neg dl{display:grid;grid-template-columns:120px 1fr;gap:8px 14px;margin:0;font-size:14px}
+.neg dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.neg dd{margin:0}
+.neg ul{margin:0;padding-left:18px}
+.neg li{margin-bottom:2px}
+.prices{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);margin-bottom:14px}
+.prices div{padding:8px 10px;border-right:1px solid var(--line)}
+.prices div:last-child{border-right:0}
+.prices span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.prices b{font-family:var(--disp);font-size:22px;font-weight:600}
+.prices .t b{color:var(--accent-ink)}
+@media (max-width:560px){.neg dl{grid-template-columns:minmax(0,1fr);gap:2px 0}.neg dd{margin-bottom:8px}}
+
+/* 90 days */
+.days{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1.5px solid var(--ink);background:var(--card)}
+.day{padding:18px 20px;border-right:1px solid var(--line)}
+.day:last-child{border-right:0}
+.day .when{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink)}
+.day h3{font-family:var(--disp);font-size:22px;font-weight:600;letter-spacing:-.02em;margin:6px 0 10px}
+.day ul{margin:0;padding-left:18px;font-size:14px}
+.day li{margin-bottom:6px}
+.day .out{margin-top:12px;font-size:13px;color:var(--ink-2);border-top:1px dashed var(--line);padding-top:10px}
+.day .out b{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;display:block}
+@media (max-width:900px){.days{grid-template-columns:minmax(0,1fr)}.day{border-right:0;border-bottom:1px solid var(--line)}.day:last-child{border-bottom:0}}
+.me{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:820px){.me{grid-template-columns:minmax(0,1fr)}}
+.me h3{font-family:var(--disp);font-size:22px;font-weight:600;letter-spacing:-.02em;margin:0 0 10px}
+.me ul{margin:0;padding-left:18px;font-size:14px}
+.me li{margin-bottom:8px}
+.me li b{font-weight:600}
+.fun{margin-top:16px;padding:16px 20px;border:1.5px dashed var(--ink);font-size:15px;display:flex;gap:14px;align-items:flex-start}
+.fun .tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:var(--ink);color:var(--paper);padding:3px 8px;white-space:nowrap}
+
+/* footer */
+footer{margin-top:80px;border-top:1.5px solid var(--ink);background:var(--card)}
+.foot{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:28px;padding-top:28px;padding-bottom:36px;font-size:13.5px;color:var(--ink-2)}
+@media (max-width:900px){.foot{grid-template-columns:minmax(0,1fr)}}
+.foot h4{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:500}
+.foot p{margin:0 0 8px}
+.foot code{font-family:var(--mono);font-size:12px;background:var(--paper-2);padding:1px 4px}
+.foot ul{margin:0;padding-left:16px}
+.foot li{margin-bottom:4px}
+.sign{font-family:var(--disp);font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+</style>
+</head>
+<body>
+
+<div class="strip">
+  <div class="wrap"><span>Technical Buyer application <b>/</b> Avular, Strijp-T, Eindhoven</span><span>Sheet TB-001 <b>/</b> Rev A <b>/</b> Simulated data</span></div>
+</div>
+
+<header class="wrap hero">
+  <div>
+    <div class="eyebrow">A sourcing sheet by <b>Paolo Caneparo</b></div>
+    <h1>From BOM<br>to PO<span class="dot">.</span></h1>
+    <p class="lede">How I would run technical buying for a mobile robot built like Avular's <strong>Origin One</strong>: what goes into it, when to order each part, what could stop the line, how to pick suppliers in NPI, and where the savings are.</p>
+    <div class="hero-actions">
+      <a class="btn" href="#bom">Open the BOM</a>
+      <a class="btn ghost" href="#plan">My first 90 days</a>
+    </div>
+    <p class="hero-note">The parts list follows Avular's public Origin One spec. Suppliers, prices, stock and lead times are simulated, so the logic is real and the numbers are not. Click any balloon on the drawing.</p>
+  </div>
+
+  <div class="sheet">
+    <svg class="robot" viewBox="0 0 660 362" role="img" aria-labelledby="rtitle">
+      <title id="rtitle">Side view line drawing of a four wheel skid steer robot, with numbered balloons that match BOM items</title>
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#15171c"/></marker>
+        <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#a8a397" stroke-width="1"/></pattern>
+      </defs>
+      <text x="16" y="14" font-family="IBM Plex Mono" font-size="10" fill="#737883" letter-spacing=".8">SIDE VIEW / NOT TO SCALE / BALLOON = BOM ITEM</text>
+      <!-- length dimension -->
+      <g stroke="#15171c" stroke-width="1" fill="none">
+        <line x1="78" y1="40" x2="78" y2="166" stroke-dasharray="2 3"/>
+        <line x1="598" y1="40" x2="598" y2="186" stroke-dasharray="2 3"/>
+        <line x1="80" y1="44" x2="596" y2="44" marker-start="url(#arr)" marker-end="url(#arr)"/>
+      </g>
+      <rect x="306" y="35" width="66" height="16" fill="#fbfaf7"/>
+      <text x="339" y="47" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#15171c">655 mm</text>
+      <!-- height dimension -->
+      <g stroke="#15171c" stroke-width="1" fill="none">
+        <line x1="22" y1="92" x2="124" y2="92" stroke-dasharray="2 3"/>
+        <line x1="26" y1="94" x2="26" y2="310" marker-start="url(#arr)" marker-end="url(#arr)"/>
+      </g>
+      <text x="0" y="0" transform="translate(40 228) rotate(-90)" font-family="IBM Plex Mono" font-size="11" fill="#15171c">330 mm</text>
+      <!-- ground -->
+      <rect x="40" y="312" width="600" height="10" fill="url(#hatch)"/>
+      <line x1="40" y1="312" x2="640" y2="312" stroke="#15171c" stroke-width="1.5"/>
+      <!-- antennas -->
+      <g stroke="#15171c" stroke-width="2" fill="#fbfaf7">
+        <line x1="128" y1="160" x2="128" y2="96"/><circle cx="128" cy="94" r="3.5"/>
+        <line x1="540" y1="160" x2="540" y2="96"/><circle cx="540" cy="94" r="3.5"/>
+      </g>
+      <!-- top rails -->
+      <rect x="110" y="158" width="440" height="12" fill="#ebe7dd" stroke="#15171c" stroke-width="1.5"/>
+      <line x1="114" y1="164" x2="546" y2="164" stroke="#15171c" stroke-width=".8" stroke-dasharray="6 4"/>
+      <!-- lidar -->
+      <rect x="300" y="126" width="64" height="32" rx="4" fill="#fbfaf7" stroke="#15171c" stroke-width="1.8"/>
+      <rect x="306" y="114" width="52" height="12" rx="3" fill="#ebe7dd" stroke="#15171c" stroke-width="1.5"/>
+      <line x1="304" y1="136" x2="360" y2="136" stroke="#15171c" stroke-width=".8"/>
+      <line x1="304" y1="146" x2="360" y2="146" stroke="#15171c" stroke-width=".8"/>
+      <!-- e-stop -->
+      <rect x="150" y="146" width="28" height="12" fill="#ebe7dd" stroke="#15171c" stroke-width="1.5"/>
+      <circle cx="164" cy="141" r="8" fill="#e8530e" stroke="#15171c" stroke-width="1.5"/>
+      <!-- body -->
+      <rect x="78" y="170" width="520" height="84" rx="10" fill="#fbfaf7" stroke="#15171c" stroke-width="2.2"/>
+      <!-- hidden internals -->
+      <g fill="none" stroke="#434852" stroke-width="1.1" stroke-dasharray="5 4">
+        <rect x="238" y="200" width="150" height="44"/>
+        <rect x="392" y="176" width="88" height="19"/>
+      </g>
+      <text x="313" y="226" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" fill="#737883">BATTERY 650 Wh</text>
+      <text x="436" y="189" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" fill="#737883">ORIN NX</text>
+      <!-- OLED + camera + ultrasonics -->
+      <rect x="500" y="184" width="40" height="16" rx="2" fill="#15171c"/>
+      <rect x="582" y="186" width="18" height="34" rx="3" fill="#ebe7dd" stroke="#15171c" stroke-width="1.5"/>
+      <circle cx="591" cy="196" r="3.2" fill="#15171c"/><circle cx="591" cy="210" r="3.2" fill="#15171c"/>
+      <circle cx="590" cy="236" r="4" fill="#fbfaf7" stroke="#15171c" stroke-width="1.5"/>
+      <circle cx="86" cy="236" r="4" fill="#fbfaf7" stroke="#15171c" stroke-width="1.5"/>
+      <!-- wheels -->
+      <g stroke="#15171c">
+        <circle cx="170" cy="254" r="58" fill="#ebe7dd" stroke-width="2.2"/>
+        <circle cx="170" cy="254" r="34" fill="#fbfaf7" stroke-width="1.5"/>
+        <circle cx="170" cy="254" r="20" fill="none" stroke-width="1.1" stroke-dasharray="4 3"/>
+        <circle cx="170" cy="254" r="7" fill="#15171c"/>
+        <circle cx="490" cy="254" r="58" fill="#ebe7dd" stroke-width="2.2"/>
+        <circle cx="490" cy="254" r="34" fill="#fbfaf7" stroke-width="1.5"/>
+        <circle cx="490" cy="254" r="20" fill="none" stroke-width="1.1" stroke-dasharray="4 3"/>
+        <circle cx="490" cy="254" r="7" fill="#15171c"/>
+      </g>
+      <!-- leaders + balloons are injected by script -->
+      <g id="balloons"></g>
+    </svg>
+    <div class="tblock">
+      <div class="wide"><span>Title</span><b>Sourcing sheet, mobile robot</b></div>
+      <div><span>Drawing no.</span><b>TB-001</b></div>
+      <div><span>Rev</span><b>A</b></div>
+      <div><span>Drawn by</span><b>P. Caneparo</b></div>
+      <div><span>Date</span><b>16 Nov 2026</b></div>
+      <div><span>Units</span><b>EUR, weeks</b></div>
+      <div><span>Data</span><b>Simulated</b></div>
+    </div>
+  </div>
+</header>
+
+<div class="controls" id="controls">
+  <div class="wrap">
+    <div class="cgroup"><span class="clabel" id="lbl-rate">Build plan, robots / month</span>
+      <div class="seg" role="group" aria-labelledby="lbl-rate" data-key="rate">
+        <button type="button" data-v="5">5</button><button type="button" data-v="10">10</button><button type="button" data-v="20">20</button><button type="button" data-v="40">40</button>
+      </div>
+    </div>
+    <div class="cgroup"><span class="clabel" id="lbl-sl">Service level</span>
+      <div class="seg" role="group" aria-labelledby="lbl-sl" data-key="sl">
+        <button type="button" data-v="90">90%</button><button type="button" data-v="95">95%</button><button type="button" data-v="98">98%</button>
+      </div>
+    </div>
+    <span class="cnote">Stock position as of 16 Nov 2026. Every number on the page follows these two settings.</span>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="kpis" id="kpis" aria-label="Key figures"></section>
+
+  <!-- 01 BOM -->
+  <section class="block" id="bom">
+    <div class="bhead">
+      <span class="bnum">01</span>
+      <h2>the BOM<span class="dot">.</span></h2>
+      <div class="bsub">
+        <p>Twenty-one buy lines for one robot, ranked by what they cost per robot. Five lines carry three quarters of the spend, and those are where a buyer earns their salary. Click a row for the risk and what I would do about it.</p>
+        <div class="ask"><b>From the job ad</b>Understand BOM structures, technical documentation and production techniques.</div>
+      </div>
+    </div>
+    <div class="bom-grid">
+      <div class="card">
+        <div class="tscroll">
+          <table id="bom-table">
+            <thead><tr>
+              <th>No.</th><th>Part</th><th>Sourcing</th><th class="num">Qty x unit</th><th class="num">Per robot</th><th class="num">Lead</th><th>Lifecycle</th><th>ABC</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <aside class="card pad detail" id="detail-bom" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <!-- 02 Reorder -->
+  <section class="block" id="reorder">
+    <div class="bhead">
+      <span class="bnum">02</span>
+      <h2>the re-order rules<span class="dot">.</span></h2>
+      <div class="bsub">
+        <p>One rule for every part wastes either cash or time. The class and the lead time decide the rule: expensive parts follow the build plan, catalogue parts get a reorder point, and cheap parts live in two bins on the line. Change the build plan above and watch the status column.</p>
+        <div class="ask"><b>From the job ad</b>Timely re-ordering and pro-active re-order rules, based on production planning and consumption data.</div>
+      </div>
+    </div>
+    <div class="policies">
+      <div class="card pad pol"><span class="chip c-blue">Order to plan</span><h3>A parts and made to drawing</h3><p>Demand comes from the build plan, not from history. POs go out one lead time before the build, as monthly call-offs on a frame agreement.</p><div class="who" id="who-plan"></div></div>
+      <div class="card pad pol"><span class="chip c-amber">Reorder point</span><h3>Catalogue and long-lead parts</h3><p>Order when stock plus open orders drops below lead time demand plus safety stock. Safety stock grows with the service level and the lead time.</p><div class="who" id="who-rop"></div></div>
+      <div class="card pad pol"><span class="chip c-grey">Two bins / VMI</span><h3>Cheap, fast moving parts</h3><p>Two bins at the line, refill one when it empties, or the supplier refills them every week. Zero planning time for parts worth about 4% of the spend.</p><div class="who" id="who-kb"></div></div>
+    </div>
+    <div class="card">
+      <div class="tools">
+        <div class="cgroup"><span class="clabel" id="lbl-flt">Show</span>
+          <div class="seg" role="group" aria-labelledby="lbl-flt" data-key="flt">
+            <button type="button" data-v="all">All lines</button><button type="button" data-v="act">Needs action</button>
+          </div>
+        </div>
+        <div class="legend"><span><i style="background:var(--ink-2)"></i>Weeks of cover (stock + open POs)</span><span><i class="lt"></i>Lead time</span></div>
+      </div>
+      <div class="tscroll">
+        <table id="ro-table">
+          <thead><tr>
+            <th>Part</th><th>Rule</th><th class="num">Need / wk</th><th class="num">Safety stock</th><th class="num">Reorder pt</th><th class="num">Stock + open</th><th>Cover vs lead time</th><th>Status</th><th class="num">Suggested PO</th><th class="num">Order by</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 Risk -->
+  <section class="block" id="risk">
+    <div class="bhead">
+      <span class="bnum">03</span>
+      <h2>the risk radar<span class="dot">.</span></h2>
+      <div class="bsub">
+        <p>Every line placed by how likely it is to fail us and how badly that would hurt the build. The top right corner gets a named second source or a buffer, the bottom left gets no meetings at all. Below the radar: four real market signals from 2025 and 2026 that land on this BOM.</p>
+        <div class="ask"><b>From the job ad</b>Monitor component lifecycles, market developments and supply risks. Find alternatives before shortages hit.</div>
+      </div>
+    </div>
+    <div class="risk-grid">
+      <div class="card pad radar">
+        <p class="card-title">Likelihood x impact, click a dot</p>
+        <svg id="radar" viewBox="0 0 400 380" role="img" aria-label="Risk matrix of BOM lines, likelihood on the horizontal axis and impact on the vertical axis"></svg>
+      </div>
+      <aside class="card pad" id="detail-risk" aria-live="polite"></aside>
+    </div>
+    <div class="watch" id="watch"></div>
+  </section>
+
+  <!-- 04 NPI -->
+  <section class="block" id="npi">
+    <div class="bhead">
+      <span class="bnum">04</span>
+      <h2>the NPI call<span class="dot">.</span></h2>
+      <div class="bsub">
+        <p>Two decisions a buyer should bring to the engineering table early. Which production technique for the chassis frame at the volume we actually expect, and which EMS partner for the electronics, scored on what matters at this stage.</p>
+        <div class="ask"><b>From the job ad</b>Partner with Engineering in NPI on supplier selection, production techniques and design for manufacturing.</div>
+      </div>
+    </div>
+    <div class="npi">
+      <div class="card pad be">
+        <p class="card-title">Chassis frame: cost per robot vs yearly volume, tooling paid off over 3 years</p>
+        <svg id="be" viewBox="0 0 580 320" role="img" aria-label="Break-even chart of three production techniques for the chassis frame"></svg>
+        <div class="opts" id="opts"></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+      <div class="card pad">
+        <p class="card-title">EMS partner for the carrier board, weighted score</p>
+        <div class="cgroup" style="margin-bottom:12px"><span class="clabel" id="lbl-pre">Weigh for</span>
+          <div class="seg" role="group" aria-labelledby="lbl-pre" data-key="pre">
+            <button type="button" data-v="speed">NPI speed</button><button type="button" data-v="bal">Balanced</button><button type="button" data-v="cost">Cost</button><button type="button" data-v="sov">Sovereignty</button>
+          </div>
+        </div>
+        <div class="tscroll"><table class="score" id="score"></table></div>
+        <div class="verdict" id="score-verdict"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 Deal -->
+  <section class="block" id="deal">
+    <div class="bhead">
+      <span class="bnum">05</span>
+      <h2>the deal<span class="dot">.</span></h2>
+      <div class="bsub">
+        <p>A yearly savings plan sized to the build plan you picked, against a target of 4% of material spend. Then the prep card I would take into the first battery pack negotiation.</p>
+        <div class="ask"><b>From the job ad</b>Lead talks on price, lead times and contracts. Manage budgets with a focus on savings and long-term value.</div>
+      </div>
+    </div>
+    <div class="deal">
+      <div class="card pad">
+        <p class="card-title">Savings plan, euro per year at <span id="deal-rate"></span></p>
+        <div id="levers"></div>
+        <div class="total">
+          <div><div class="k-label">Price savings</div><div class="big tnum" id="sav-total"></div></div>
+          <div style="text-align:right"><div class="k-label">Target, 4% of spend</div><div class="big tnum muted" id="sav-target"></div></div>
+        </div>
+        <div class="target" id="target-bar"><i></i><b></b></div>
+        <p class="muted" style="font-size:13px;margin:10px 0 0" id="sav-note"></p>
+      </div>
+      <div class="card pad neg">
+        <p class="card-title">Negotiation prep: battery pack, item 3</p>
+        <div class="prices">
+          <div><span>Today</span><b>€780</b></div>
+          <div class="t"><span>Target</span><b>€720</b></div>
+          <div><span>Walk away</span><b>€760</b></div>
+        </div>
+        <dl>
+          <dt>We give</dt><dd><ul><li>A 12 month rolling forecast, updated monthly</li><li>A 100 pack frame agreement with monthly call-offs</li><li>Payment in 30 days, and a reference for their next robotics customer</li></ul></dd>
+          <dt>We ask</dt><dd><ul><li>€720 per pack, reviewed only against a cell price index</li><li>4 weeks of finished packs held at their site</li><li>UN 38.3 summary and the EU battery file delivered with the first call-off</li></ul></dd>
+          <dt>Our walk away</dt><dd>A second pack assembler, quoted at €805 and about 18 weeks to qualify. Good enough to walk, not good enough to want to.</dd>
+          <dt>Their pressure</dt><dd>Cell allocation and rising compliance cost. Answer with volume visibility, not with a higher price.</dd>
+          <dt>Order of play</dt><dd>Open with the forecast and the frame, trade payment terms for the buffer stock, close on price last.</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 Plan -->
+  <section class="block" id="plan">
+    <div class="bhead">
+      <span class="bnum">06</span>
+      <h2>the first 90 days<span class="dot">.</span></h2>
+      <div class="bsub">
+        <p>Hands-on first, process second. The orders keep flowing from day one while the rules, the ERP set-up and the supplier base get better underneath them.</p>
+        <div class="ask"><b>From the job ad</b>Own the purchasing process: workflows, the ERP set-up and how we work with suppliers.</div>
+      </div>
+    </div>
+    <div class="days">
+      <div class="day"><span class="when">Days 1 to 30</span><h3>Learn the robot and the numbers</h3>
+        <ul><li>Take over open POs and the daily order flow, so nothing waits on me</li><li>Walk every BOM line with R&amp;D and the build team, on the floor</li><li>Clean the ERP item master: lead times, MOQs, prices, preferred supplier</li><li>Spend analysis and ABC classes; meet the top 10 suppliers</li></ul>
+        <div class="out"><b>Output</b>A BOM risk list everyone agrees on, and trusted data in the ERP.</div></div>
+      <div class="day"><span class="when">Days 31 to 60</span><h3>Set the rules</h3>
+        <ul><li>Re-order rule per part (plan, reorder point, two bins) live in the ERP</li><li>PO approval flow and three-way match of PO, receipt and invoice</li><li>Supplier scorecard: on time delivery, quality, price</li><li>Lifecycle watch on every active part, with change notice alerts</li></ul>
+        <div class="out"><b>Output</b>Re-orders driven by the build plan, not by memory.</div></div>
+      <div class="day"><span class="when">Days 61 to 90</span><h3>Cut risk, then cost</h3>
+        <ul><li>A second source in qualification for the top 3 risks</li><li>Frame agreements for compute, motors and the battery pack</li><li>A sourcing checklist built into the NPI stage gates</li><li>Savings tracker agreed with finance, reviewed monthly</li></ul>
+        <div class="out"><b>Output</b>A sourcing plan for the next product generation.</div></div>
+    </div>
+    <div class="me">
+      <div class="card pad"><h3>What I bring</h3>
+        <ul>
+          <li><b>I built purchasing software that 40+ brands ran on.</b> As co-founder and CPO of Rewize I designed the re-order rules, MOQ and lead time logic, supplier POs, bills of materials and production orders that customers used every week.</li>
+          <li><b>Measured outcomes.</b> At one customer, stockouts fell 54% and purchase order time fell 90%.</li>
+          <li><b>Commercial sharpness.</b> I closed every early Rewize deal myself, so I know how the other side of the table thinks about price, terms and volume.</li>
+          <li><b>I build my own tools.</b> This page is one of them. I work fast with data and AI, and I like the operational detail.</li>
+        </ul>
+      </div>
+      <div class="card pad"><h3>What I am still learning</h3>
+        <ul>
+          <li><b>Years of electronics buying.</b> I have not run allocation talks with a semiconductor distributor yet. I know the logic, and I want the reps.</li>
+          <li><b>Production techniques in depth.</b> I can read a drawing and a quote. I want to stand next to the sheet metal shop and the EMS line to learn the rest.</li>
+          <li><b>Your ERP.</b> I have integrated with Odoo and several WMS systems, so I learn a new one quickly.</li>
+        </ul>
+        <p style="font-size:14px;margin:12px 0 0;color:var(--ink-2)">How I close the gap: the way I made this page. Go to the source, test the logic on real numbers, and ask the people who do it every day.</p>
+      </div>
+    </div>
+    <div class="fun"><span class="tag">Fun fact</span><span>I have already worked from your building. For a couple of months Rewize, my previous startup, had its desks in the Avular office at Strijp-T. I would like to come back, this time to keep your robots moving.</span></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>
+      <h4>About</h4>
+      <p class="sign">Paolo Caneparo</p>
+      <p>Eindhoven. Former co-founder and CPO of Rewize (AI inventory planning). MSc Innovation and Entrepreneurship, Esade.</p>
+      <p><a href="https://www.linkedin.com/in/paolo-caneparo">linkedin.com/in/paolo-caneparo</a></p>
+      <p class="muted">Built for my Technical Buyer application, November 2026. Not affiliated with or endorsed by Avular. The part list follows Avular's public Origin One documentation; every supplier, price, stock level and lead time is simulated.</p>
+    </div>
+    <div>
+      <h4>Method</h4>
+      <p><code>need/wk = plan x qty x attach rate x (1 + spares) / 4.33</code></p>
+      <p><code>safety stock = z x 0.35 x need/wk x &radic;lead time</code>, with z = 1.28, 1.65, 2.05 for 90, 95, 98%.</p>
+      <p><code>reorder point = need/wk x lead time + safety stock</code></p>
+      <p><code>suggested PO = need over lead time + review period + safety stock, minus stock and open POs, rounded up to the MOQ</code></p>
+      <p><code>cost per robot = unit cost + tooling / (3 x yearly volume)</code></p>
+    </div>
+    <div>
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://avular-robotics.github.io/origin_one/1.0-1/platform_specs/">Origin One platform specs</a>, Avular</li>
+        <li><a href="https://www.hackster.io/news/nvidia-hikes-jetson-pricing-by-up-to-101-as-the-company-gets-caught-out-by-its-own-ai-bubble-91701d7c5783">Jetson price rises</a>, Hackster, 2026</li>
+        <li><a href="https://www.cnx-software.com/2026/04/30/nvidia-phases-out-several-jetson-modules-due-to-high-lpddr4-ram-prices-and-tight-supplies/">Jetson LPDDR4 end of life</a>, CNX Software, Apr 2026</li>
+        <li><a href="https://gamesbeat.com/memory-chip-prices-soar-up-to-90-in-q1-2026-counterpoint/">Memory prices Q1 2026</a>, Counterpoint via GamesBeat</li>
+        <li><a href="https://pillsburylaw.com/en/news-and-insights/china-suspends-export-controls-certain-critical-minerals-related-items.html">China rare earth controls</a>, Pillsbury</li>
+        <li><a href="https://www.tomshardware.com/tech-industry/realsense-completes-spin-out-from-intel-gets-usd50-million-in-funding-from-intel-capital-and-mediatek">RealSense spin-out</a>, Tom's Hardware, Jul 2025</li>
+        <li><a href="https://www.compliancegate.com/eu-batteries-regulation-timeline-and-dates/">EU Batteries Regulation timeline</a>, ComplianceGate</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- data ---------- */
+const ASOF = new Date(2026, 10, 16);
+const Z = {90:1.28, 95:1.65, 98:2.05};
+const CV = 0.35;
+const REVIEW = {plan:4, rop:2, kb:1};
+const RULE = {plan:{t:"Order to plan", c:"c-blue"}, rop:{t:"Reorder point", c:"c-amber"}, kb:{t:"Two bins", c:"c-grey"}};
+
+// balloon positions on the drawing: [balloonX, balloonY, targetX, targetY]
+const BAL = {
+  cmp:[455,96,446,180], bat:[250,96,280,206], mot:[420,340,476,268], lid:[332,80,332,114],
+  cam:[632,168,600,200], uss:[632,244,594,236], whl:[236,340,202,298], chs:[566,118,566,172], est:[112,118,156,138]
+};
+
+const BOM = [
+ {id:"cmp", no:1, name:"Compute module", spec:"NVIDIA Jetson Orin NX 16 GB", com:"Compute", src:"Sole", type:"Catalogue", qty:1, att:1, price:980, lt:16, moq:5, life:["Price up","amber"], L:4, I:5, rule:"plan", spare:.02, oh:12, oo:25,
+  risk:"One maker, and the price moved in 2026: memory shortages pushed NVIDIA to raise Jetson prices and to retire its LPDDR4 modules. Every robot needs one, so a gap here stops the line.",
+  fix:"Share a 12 month forecast with the distributor, lock volume and price for the year, hold 4 weeks of buffer. Agree the module for the next generation with R&D before that NPI starts.",
+  alt:"No drop-in second source. Protection is buffer stock, a frame agreement, and a carrier board ready for the next Jetson module."},
+ {id:"pcb", no:2, name:"Carrier and power board", spec:"Custom PCBA, built by an EMS partner", com:"Electronics", src:"Single", type:"Drawing", qty:1, att:1, price:420, lt:12, moq:25, life:["Active","green"], L:3, I:5, rule:"plan", spare:.03, oh:30, oo:25,
+  risk:"Dozens of semiconductors on one board, and the slowest chip sets the lead time of the whole board. One missing regulator means no robots.",
+  fix:"Scrub the board BOM for single source and end of life chips every quarter, add approved alternates to the drawing, pre-buy long-lead chips on consignment at the EMS.",
+  alt:"A second EMS qualified on the same Gerbers and test fixtures. See the scorecard in section 04."},
+ {id:"bat", no:3, name:"Battery pack", spec:"650 Wh Li-ion with BMS, 50.4 V charge", com:"Energy", src:"Single", type:"Drawing", qty:1, att:1, price:780, lt:14, moq:20, life:["New rules","amber"], L:3, I:5, rule:"plan", spare:.05, oh:22, oo:20,
+  risk:"A custom pack from one assembler. Cell allocation, UN 38.3 transport tests and the EU Batteries Regulation (QR code on every battery from 18 Feb 2027) all land on this line.",
+  fix:"Frame agreement with monthly call-offs, finished packs held at the supplier, the compliance file and UN 38.3 summary kept in the supplier record. Negotiation plan in section 05.",
+  alt:"Qualify a second cell brand in the same 21700 format, so the assembler can switch cells without a redesign."},
+ {id:"mot", no:4, name:"Drive motor with brake", spec:"166 W BLDC gear motor, holding brake", com:"Drive", src:"Single", type:"Drawing", qty:4, att:1, price:260, lt:16, moq:20, life:["Magnet risk","amber"], L:4, I:5, rule:"plan", spare:.08, oh:96, oo:80,
+  risk:"Four per robot, custom spec, one maker. The NdFeB magnets inside depend on heavy rare earths, and China's export licensing on those still applies.",
+  fix:"Ask the maker for magnet origin, magnet stock and licence status. Hold 6 weeks of buffer while the export rules move, and start qualifying a second motor in the next NPI.",
+  alt:"A second motor with the same flange and connector, validated by R&D on one test robot."},
+ {id:"drv", no:5, name:"Motor controller", spec:"One channel per motor, CAN", com:"Drive", src:"Single", type:"Catalogue", qty:4, att:1, price:95, lt:10, moq:10, life:["Active","green"], L:2, I:4, rule:"rop", spare:.03, oh:120, oo:40,
+  risk:"A catalogue part, but the firmware is tuned to it. A forced change means re-tuning and re-testing the drive.",
+  fix:"Buy through a franchised distributor, subscribe to change notices, keep one firmware-tested alternate on file.",
+  alt:"Pin compatible controller from the same family."},
+ {id:"lid", no:6, name:"3D LiDAR (option)", spec:"64 channel, 45 m range (Ouster)", com:"Sensors", src:"Sole", type:"Catalogue", qty:1, att:.4, price:7800, lt:8, moq:1, life:["Active","green"], L:3, I:4, rule:"plan", spare:0, oh:4, oo:5,
+  risk:"The most expensive part on the robot, fitted to about 4 in 10 robots. Too much stock ties up cash, too little loses an order.",
+  fix:"Configure to order: buy against confirmed customer orders, keep 2 units for demos and rush orders, review the attach rate with sales every month.",
+  alt:"A second LiDAR brand tested on the same mount and driver, for price talks and as a fallback."},
+ {id:"cam", no:7, name:"Depth camera", spec:"RealSense D435f", com:"Sensors", src:"Sole", type:"Catalogue", qty:1, att:1, price:290, lt:6, moq:10, life:["New owner","amber"], L:3, I:4, rule:"rop", spare:.05, oh:22, oo:0,
+  risk:"RealSense left Intel and became an independent company in July 2025. The current range is committed, but a new owner can change a roadmap.",
+  fix:"Watch change notices, agree a last-time-buy trigger with sales and service, and test one alternative stereo camera in the next NPI.",
+  alt:"Another stereo depth camera with a ROS 2 driver, from makers such as Luxonis or Orbbec."},
+ {id:"gns", no:8, name:"RTK GNSS (option)", spec:"u-blox RTK receiver", com:"Sensors", src:"Multi", type:"Catalogue", qty:1, att:.6, price:220, lt:8, moq:5, life:["Active","green"], L:2, I:3, rule:"rop", spare:.02, oh:18, oo:0,
+  risk:"A mature catalogue part, stocked by several distributors.", fix:"Reorder point with safety stock, bought together with the other catalogue electronics.", alt:"Other RTK modules from the same maker or a second brand."},
+ {id:"imu", no:9, name:"IMU board", spec:"6 axis IMU plus magnetometer", com:"Sensors", src:"Single", type:"Catalogue", qty:1, att:1, price:45, lt:8, moq:25, life:["NRND","red"], L:3, I:3, rule:"rop", spare:.02, oh:40, oo:0,
+  risk:"Simulated example: the chip maker has marked the IMU not recommended for new designs. It still ships, but the end is in sight.",
+  fix:"Size a last-time-buy for 18 months of production and service, and ask R&D to validate the successor chip in the next board spin.",
+  alt:"The successor chip from the same maker, pin compatible."},
+ {id:"uss", no:10, name:"Ultrasonic sensor", spec:"3 front, 3 rear", com:"Sensors", src:"Multi", type:"Catalogue", qty:6, att:1, price:18, lt:6, moq:50, life:["Active","green"], L:1, I:2, rule:"kb", spare:.05, oh:150, oo:0,
+  risk:"Cheap commodity sensor with many sources.", fix:"Two bins at the line, no planning effort.", alt:"Several equivalent makers."},
+ {id:"com", no:11, name:"Radio module", spec:"Wi-Fi 6, Bluetooth 5.2, LTE Cat 4", com:"Connectivity", src:"Single", type:"Catalogue", qty:1, att:1, price:85, lt:10, moq:10, life:["Active","green"], L:2, I:3, rule:"rop", spare:.02, oh:34, oo:0,
+  risk:"Radio parts carry certification. Swapping the module can mean new RED and cybersecurity (EN 18031) paperwork.",
+  fix:"Stay with pre-certified modules, buy with the catalogue bundle, track the maker's LTE roadmap.", alt:"A pre-certified module from a second maker, with the antenna tested once."},
+ {id:"whl", no:12, name:"Wheel and tyre", spec:"10 inch pneumatic", com:"Mechanical", src:"Multi", type:"Catalogue", qty:4, att:1, price:22, lt:4, moq:20, life:["Active","green"], L:1, I:2, rule:"kb", spare:.15, oh:80, oo:0,
+  risk:"A wear part, so service spares eat into the stock.", fix:"Two bins with a higher spares factor (15%).", alt:"Several suppliers, and a solid tyre option."},
+ {id:"chs", no:13, name:"Chassis frame", spec:"Aluminium sheet metal, bent and welded", com:"Mechanical", src:"Single", type:"Drawing", qty:1, att:1, price:340, lt:6, moq:10, life:["Active","green"], L:2, I:4, rule:"plan", spare:0, oh:8, oo:10,
+  risk:"Made to drawing by one local shop. It is also the part that limits how many robots can be built from stock today.",
+  fix:"Order to the build plan, give the drawings to a second shop, and choose the production technique by volume (section 04).",
+  alt:"A second sheet metal shop in Brainport, and a die-cast frame once volume pays for the tool."},
+ {id:"hou", no:14, name:"Housing and covers", spec:"IP54 covers and seals", com:"Mechanical", src:"Single", type:"Drawing", qty:1, att:1, price:210, lt:8, moq:10, life:["Active","green"], L:2, I:3, rule:"plan", spare:.03, oh:30, oo:0,
+  risk:"Made to drawing, with sealing and cosmetic requirements. Any change needs a new IP test.", fix:"Order to plan with the frame, freeze the drawing revision per batch.", alt:"A second shop on the same drawing."},
+ {id:"har", no:15, name:"Cable harness", spec:"Full robot set", com:"Cabling", src:"Single", type:"Drawing", qty:1, att:1, price:140, lt:6, moq:25, life:["Active","green"], L:2, I:3, rule:"rop", spare:.02, oh:28, oo:0,
+  risk:"Custom, labour heavy, and full of connectors that have their own lead times.", fix:"Design to cost with R&D: fewer connector types and standard lengths (section 05).", alt:"Two harness makers on the same drawing."},
+ {id:"con", no:16, name:"Connectors and glands", spec:"IP67 circular connectors, cable glands", com:"Cabling", src:"Multi", type:"Catalogue", qty:1, att:1, price:75, lt:10, moq:25, life:["Long lead","amber"], L:3, I:4, rule:"rop", spare:.05, oh:20, oo:0,
+  risk:"Cheap parts that stop the line. Some industrial connector series quote 10 weeks or more.", fix:"Reorder point with safety stock, one frame order at a distributor, the 5 critical series always in stock.", alt:"A cross-reference list of equivalent series."},
+ {id:"chg", no:17, name:"Charger", spec:"50.4 V output, 110 to 230 VAC input", com:"Energy", src:"Multi", type:"Catalogue", qty:1, att:1, price:120, lt:10, moq:20, life:["Active","green"], L:2, I:2, rule:"rop", spare:.02, oh:40, oo:0,
+  risk:"Private label catalogue part, low risk.", fix:"Reorder point, bought in MOQ.", alt:"Equivalent chargers with the same connector."},
+ {id:"est", no:18, name:"E-stop and safety relay", spec:"Emergency stop controller", com:"Safety", src:"Single", type:"Catalogue", qty:1, att:1, price:95, lt:8, moq:10, life:["Active","green"], L:2, I:4, rule:"rop", spare:.02, oh:30, oo:0,
+  risk:"A safety part. Any change means re-validating the safety function.", fix:"Buy only the validated part numbers, keep the safety file current, reorder point with buffer.", alt:"Only alternates approved in the safety assessment."},
+ {id:"hmi", no:19, name:"Display and lights", spec:"1.5 inch OLED, RGB LEDs, buttons", com:"Electronics", src:"Multi", type:"Catalogue", qty:1, att:1, price:30, lt:6, moq:50, life:["Active","green"], L:1, I:1, rule:"kb", spare:.03, oh:60, oo:0,
+  risk:"Low value, low risk.", fix:"Two bins.", alt:"Many equivalents."},
+ {id:"fas", no:20, name:"Fasteners and rails", spec:"Screws, V-slot 2020 rails, small parts", com:"Mechanical", src:"Multi", type:"Catalogue", qty:1, att:1, price:40, lt:2, moq:50, life:["Active","green"], L:1, I:1, rule:"kb", spare:.05, oh:45, oo:0,
+  risk:"Hundreds of cheap parts. The real cost is the time spent ordering them.", fix:"Vendor managed inventory: the supplier refills the bins every week.", alt:"Any industrial fastener supplier."},
+ {id:"pkg", no:21, name:"Transport case", spec:"Case and packaging", com:"Packaging", src:"Multi", type:"Catalogue", qty:1, att:1, price:60, lt:4, moq:20, life:["Active","green"], L:1, I:1, rule:"kb", spare:0, oh:16, oo:0,
+  risk:"Low risk, but no case means no shipment.", fix:"Two bins, 20 cases per order.", alt:"Several case suppliers."}
+];
+
+const WATCH = [
+ {when:"2026, memory squeeze", title:"Jetson modules got more expensive", parts:"Hits item 1, and every board with DRAM",
+  body:"Mobile DRAM contract prices rose about 80 to 90% in Q1 2026. NVIDIA raised Jetson module prices, by up to about 100% on some modules, and moved its LPDDR4 modules to end of life with a last-time-buy in July 2026.",
+  act:"Lock 12 months of Orin NX volume and price now, and agree the next generation module with R&D early.",
+  src:[["Hackster","https://www.hackster.io/news/nvidia-hikes-jetson-pricing-by-up-to-101-as-the-company-gets-caught-out-by-its-own-ai-bubble-91701d7c5783"],["CNX Software","https://www.cnx-software.com/2026/04/30/nvidia-phases-out-several-jetson-modules-due-to-high-lpddr4-ram-prices-and-tight-supplies/"],["Counterpoint","https://gamesbeat.com/memory-chip-prices-soar-up-to-90-in-q1-2026-counterpoint/"]]},
+ {when:"Nov 2026, export rules", title:"Rare earths for motor magnets", parts:"Hits item 4",
+  body:"China's April 2025 licensing on heavy rare earths, used in NdFeB motor magnets, still applies. The one-year pause on its October 2025 extensions was set to run until November 2026, so what happens to it this month matters.",
+  act:"Ask the motor maker for magnet origin, stock and licence status, and hold extra buffer until the rules settle.",
+  src:[["Pillsbury","https://pillsburylaw.com/en/news-and-insights/china-suspends-export-controls-certain-critical-minerals-related-items.html"],["Clark Hill","https://clarkhill.com/news-events/news/china-hits-pause-on-rare-earth-export-controls-and-what-it-means-for-supply-chains"]]},
+ {when:"Jul 2025, ownership", title:"RealSense left Intel", parts:"Hits item 7",
+  body:"RealSense became an independent company with a 50 million dollar Series A from Intel Capital and MediaTek. Intel said the current portfolio and roadmap continue.",
+  act:"Business as usual for now. Watch change notices, and test an alternative depth camera in the next NPI.",
+  src:[["Tom's Hardware","https://www.tomshardware.com/tech-industry/realsense-completes-spin-out-from-intel-gets-usd50-million-in-funding-from-intel-capital-and-mediatek"]]},
+ {when:"Feb 2027, regulation", title:"EU Batteries Regulation deadlines", parts:"Hits item 3",
+  body:"From 18 February 2027 every battery sold in the EU needs a QR code linking to its product information. Due diligence duties follow in August 2027.",
+  act:"Make the compliance file and the UN 38.3 summary a delivery condition in the battery frame agreement.",
+  src:[["ComplianceGate","https://www.compliancegate.com/eu-batteries-regulation-timeline-and-dates/"]]}
+];
+
+// chassis production techniques
+const TECH = [
+ {k:"cnc", name:"CNC machined", unit:720, tool:0, lead:"3 wks, no tool", col:"#8b909a", note:"Best for prototypes that change every week."},
+ {k:"sheet", name:"Sheet metal, welded", unit:340, tool:4000, lead:"6 wks, fixtures only", col:"#2a62a6", note:"Today's choice. Cheap fixtures, easy to change."},
+ {k:"die", name:"Die-cast, machined", unit:130, tool:140000, lead:"20 wks for the tool", col:"#e8530e", note:"Lowest unit cost, but the tool must be paid off."}
+];
+const AMORT = 3;
+
+// EMS scorecard
+const CRIT = [
+ {n:"Quality and certifications", w:{bal:25,speed:20,cost:20,sov:20}},
+ {n:"Unit cost", w:{bal:20,speed:10,cost:35,sov:15}},
+ {n:"Lead time and flexibility", w:{bal:15,speed:30,cost:10,sov:15}},
+ {n:"Engineering and DFM support", w:{bal:15,speed:20,cost:10,sov:15}},
+ {n:"Location and sovereignty", w:{bal:10,speed:10,cost:5,sov:25}},
+ {n:"Financial health", w:{bal:10,speed:5,cost:15,sov:5}},
+ {n:"Room to scale", w:{bal:5,speed:5,cost:5,sov:5}}
+];
+const EMS = [
+ {n:"EMS A", d:"Brainport, 15 km", s:[5,2,5,5,5,4,3]},
+ {n:"EMS B", d:"Central Europe", s:[4,4,3,3,4,4,4]},
+ {n:"EMS C", d:"Asia, large", s:[4,5,2,2,1,5,5]}
+];
+const PRE = {speed:"NPI speed", bal:"balanced", cost:"cost", sov:"sovereignty"};
+
+/* ---------- state ---------- */
+const S = {rate:10, sl:95, flt:"all", pre:"speed", sel:"mot"};
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const eur = (n, d) => "€" + Math.round(n).toLocaleString("en-GB");
+const eurK = n => n >= 1e6 ? "€" + (n/1e6).toFixed(2) + "M" : n >= 1e4 ? "€" + Math.round(n/1000) + "k" : n >= 1e3 ? "€" + (n/1000).toFixed(1) + "k" : eur(n);
+const f1 = n => n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString("en-GB");
+const int = n => Math.round(n).toLocaleString("en-GB");
+const ceilTo = (n, m) => Math.ceil(n / m) * m;
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const dstr = d => d.getDate() + " " + MONTHS[d.getMonth()];
+const byId = id => BOM.find(b => b.id === id);
+const perRobot = b => b.price * b.qty * b.att;
+
+// ABC classes by cumulative spend per robot (average configuration)
+(function(){
+  const tot = BOM.reduce((a,b) => a + perRobot(b), 0);
+  let cum = 0;
+  [...BOM].sort((a,b) => perRobot(b) - perRobot(a)).forEach(b => {
+    cum += perRobot(b);
+    const before = cum - perRobot(b);
+    b.cls = before < tot*.7 ? "A" : before < tot*.9 ? "B" : "C";
+  });
+})();
+
+function calc(b){
+  const d = S.rate * b.qty * b.att * (1 + b.spare) / 4.33;
+  const ss = Z[S.sl] * CV * d * Math.sqrt(b.lt);
+  const rop = d * b.lt + ss;
+  const pos = b.oh + b.oo;
+  const cover = d > 0 ? pos / d : 99;
+  let st = pos < rop ? "order" : pos < rop + 2*d ? "watch" : "ok";
+  const target = d * (b.lt + REVIEW[b.rule]) + ss;
+  const sugg = st === "order" ? ceilTo(Math.max(target - pos, b.moq), b.moq) : 0;
+  let by;
+  if (pos < rop) by = null; else { const w = Math.floor((pos - rop) / d); by = new Date(ASOF.getTime() + w*7*864e5); }
+  return {d, ss, rop, pos, cover, st, sugg, val: sugg * b.price, by};
+}
+
+const STAT = {order:["Order now","c-red"], watch:["Watch","c-amber"], ok:["OK","c-green"]};
+const SRC = {Sole:"c-red", Single:"c-amber", Multi:"c-green"};
+
+/* ---------- KPIs ---------- */
+function renderKPIs(){
+  const mat = BOM.reduce((a,b) => a + perRobot(b), 0);
+  const annual = mat * S.rate * 12;
+  const rows = BOM.map(b => [b, calc(b)]);
+  const orders = rows.filter(r => r[1].st === "order");
+  const poVal = orders.reduce((a,r) => a + r[1].val, 0);
+  let lim = null, build = Infinity;
+  BOM.filter(b => b.att === 1).forEach(b => { const n = Math.floor(b.oh / b.qty); if (n < build){ build = n; lim = b; } });
+  const sole = BOM.filter(b => b.src === "Sole").reduce((a,b) => a + perRobot(b), 0);
+  $("#kpis").innerHTML = `
+    <div class="kpi"><div class="k-label">Material per robot</div><div class="k-value tnum">${eur(mat)}</div><div class="k-sub">Average build, options at their attach rate</div></div>
+    <div class="kpi"><div class="k-label">Yearly material spend</div><div class="k-value tnum">${eurK(annual)}</div><div class="k-sub">At ${S.rate} robots a month</div></div>
+    <div class="kpi ${orders.length ? "alert" : ""}"><div class="k-label">Lines to order now</div><div class="k-value tnum">${orders.length}<small>of ${BOM.length}</small></div><div class="k-sub">${orders.length ? eurK(poVal) + " of POs to release" : "Nothing below its reorder point"}</div></div>
+    <div class="kpi"><div class="k-label">Robots buildable today</div><div class="k-value tnum">${build}</div><div class="k-sub">From stock on hand, limited by item ${lim.no}, ${lim.name.toLowerCase()}</div></div>
+    <div class="kpi"><div class="k-label">Spend with one maker</div><div class="k-value tnum">${Math.round(sole/mat*100)}<small>%</small></div><div class="k-sub">Sole source lines: compute, LiDAR, camera</div></div>`;
+}
+
+/* ---------- BOM table ---------- */
+function renderBOM(){
+  const mat = BOM.reduce((a,b) => a + perRobot(b), 0);
+  const max = Math.max(...BOM.map(perRobot));
+  const rows = [...BOM].sort((a,b) => perRobot(b) - perRobot(a));
+  $("#bom-table tbody").innerHTML = rows.map(b => `
+    <tr data-id="${b.id}" class="${b.id === S.sel ? "sel" : ""}" tabindex="0" aria-selected="${b.id === S.sel}">
+      <td class="pn">${String(b.no).padStart(2,"0")}</td>
+      <td><span class="pname">${b.name}</span><span class="pspec">${b.com} / ${b.spec}</span></td>
+      <td><span class="chip ${SRC[b.src]}">${b.src}</span><span class="pspec">${b.type}</span></td>
+      <td class="num" style="white-space:nowrap">${b.qty} x ${eur(b.price)}${b.att < 1 ? `<span class="pspec" style="margin-left:auto">on ${Math.round(b.att*100)}% of robots</span>` : ""}</td>
+      <td class="num"><div class="sharebar"><i style="width:${Math.max(2, perRobot(b)/max*56)}px"></i><span>${eur(perRobot(b))}</span></div></td>
+      <td class="num" style="white-space:nowrap">${b.lt} wk</td>
+      <td><span class="chip c-${b.life[1]}">${b.life[0]}</span></td>
+      <td><span class="cls ${b.cls}">${b.cls}</span></td>
+    </tr>`).join("");
+}
+
+function detailHTML(b){
+  const c = calc(b);
+  const score = b.L * b.I;
+  const sc = score >= 15 ? "c-red" : score >= 8 ? "c-amber" : "c-green";
+  const tot = BOM.reduce((a,x) => a + perRobot(x), 0);
+  return `
+    <div class="d-no">ITEM ${String(b.no).padStart(2,"0")} / CLASS ${b.cls}</div>
+    <div class="d-name">${b.name}</div>
+    <p class="d-spec">${b.spec}</p>
+    <div class="d-chips">
+      <span class="chip ${SRC[b.src]}">${b.src} source</span>
+      <span class="chip ${RULE[b.rule].c}">${RULE[b.rule].t}</span>
+      <span class="chip ${sc}">Risk ${b.L} x ${b.I} = ${score}</span>
+      <span class="chip ${STAT[c.st][1]}">${STAT[c.st][0]}</span>
+    </div>
+    <div class="d-facts">
+      <div><span>Per robot</span><b class="tnum">${eur(perRobot(b))}</b></div>
+      <div><span>Share</span><b class="tnum">${(perRobot(b)/tot*100).toFixed(1)}%</b></div>
+      <div><span>Lead time</span><b class="tnum">${b.lt} wks</b></div>
+    </div>
+    <div class="d-sec"><h4>Why it matters</h4><p>${b.risk}</p></div>
+    <div class="d-sec"><h4>What I would do</h4><p>${b.fix}</p></div>
+    <div class="d-sec"><h4>Second option</h4><p>${b.alt}</p></div>`;
+}
+
+function renderDetail(){
+  const b = byId(S.sel);
+  $("#detail-bom").innerHTML = detailHTML(b);
+  $("#detail-risk").innerHTML = detailHTML(b);
+}
+
+/* ---------- reorder table ---------- */
+function renderReorder(){
+  const order = {order:0, watch:1, ok:2};
+  let rows = BOM.map(b => [b, calc(b)]);
+  rows.sort((a,b) => order[a[1].st] - order[b[1].st] || (a[1].cover - a[0].lt) - (b[1].cover - b[0].lt));
+  if (S.flt === "act") rows = rows.filter(r => r[1].st !== "ok");
+  const maxW = 30;
+  $("#ro-table tbody").innerHTML = rows.map(([b,c]) => {
+    const cw = Math.min(c.cover, maxW) / maxW * 100;
+    const lw = Math.min(b.lt, maxW) / maxW * 100;
+    const by = c.st === "order" ? `<b style="color:var(--red)">Now</b>` : dstr(c.by);
+    return `<tr data-id="${b.id}" class="${b.id === S.sel ? "sel" : ""}">
+      <td><span class="pname">${b.name}</span><span class="pspec">Item ${b.no}, MOQ ${b.moq}, lead time ${b.lt} wks</span></td>
+      <td><span class="chip ${RULE[b.rule].c}">${RULE[b.rule].t}</span></td>
+      <td class="num">${f1(c.d)}</td>
+      <td class="num">${int(c.ss)}</td>
+      <td class="num">${int(c.rop)}</td>
+      <td class="num">${int(c.pos)}</td>
+      <td><div class="cover"><div class="track"><div class="fill" style="width:${cw}%"></div><div class="lt" style="left:calc(${lw}% - 1px)"></div></div><span>${c.cover >= maxW ? "30+" : f1(c.cover)} wk</span></div></td>
+      <td><span class="chip ${STAT[c.st][1]}">${STAT[c.st][0]}</span></td>
+      <td class="num">${c.sugg ? `<b>${int(c.sugg)}</b> <span class="muted">/ ${eurK(c.val)}</span>` : `<span class="muted">none</span>`}</td>
+      <td class="num">${by}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="10" class="muted" style="padding:18px">Every line is above its reorder point at this build plan.</td></tr>`;
+  const names = r => BOM.filter(b => b.rule === r).map(b => b.no).join(", ");
+  $("#who-plan").textContent = "Items " + names("plan");
+  $("#who-rop").textContent = "Items " + names("rop");
+  $("#who-kb").textContent = "Items " + names("kb");
+}
+
+/* ---------- radar ---------- */
+function renderRadar(){
+  const x0 = 46, y0 = 14, cs = 66, n = 5;
+  let h = "";
+  for (let L = 1; L <= n; L++) for (let I = 1; I <= n; I++){
+    const s = L * I;
+    const fill = s >= 15 ? "#f3d2ce" : s >= 8 ? "#f3e6c3" : "#e3efe5";
+    h += `<rect x="${x0 + (L-1)*cs}" y="${y0 + (n-I)*cs}" width="${cs}" height="${cs}" fill="${fill}" stroke="#fbfaf7" stroke-width="2"/>`;
+  }
+  for (let i = 1; i <= n; i++){
+    h += `<text x="${x0 + (i-.5)*cs}" y="${y0 + n*cs + 16}" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#737883">${i}</text>`;
+    h += `<text x="${x0 - 10}" y="${y0 + (n-i+.5)*cs + 4}" text-anchor="end" font-family="IBM Plex Mono" font-size="11" fill="#737883">${i}</text>`;
+  }
+  h += `<text x="${x0 + n*cs/2}" y="${y0 + n*cs + 36}" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#434852" letter-spacing=".8">LIKELIHOOD</text>`;
+  h += `<text transform="translate(14 ${y0 + n*cs/2}) rotate(-90)" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#434852" letter-spacing=".8">IMPACT ON THE BUILD</text>`;
+  const cells = {};
+  BOM.forEach(b => { const k = b.L + "-" + b.I; (cells[k] = cells[k] || []).push(b); });
+  const OFF = {1:[[0,0]], 2:[[-14,0],[14,0]], 3:[[-14,-13],[14,-13],[0,14]], 4:[[-14,-14],[14,-14],[-14,14],[14,14]]};
+  Object.values(cells).forEach(list => {
+    list.forEach((b, i) => {
+      const [dx, dy] = OFF[list.length][i];
+      const cx = x0 + (b.L - .5)*cs + dx, cy = y0 + (n - b.I + .5)*cs + dy;
+      const on = b.id === S.sel;
+      h += `<g class="rdot ${on ? "on" : ""}" data-id="${b.id}" tabindex="0" role="button" aria-label="Item ${b.no}, ${b.name}, risk ${b.L * b.I}">
+        <circle cx="${cx}" cy="${cy}" r="12.5" fill="${on ? "#e8530e" : "#fbfaf7"}"/>
+        <text x="${cx}" y="${cy + 4}" text-anchor="middle" fill="${on ? "#ffffff" : "#15171c"}">${b.no}</text></g>`;
+    });
+  });
+  $("#radar").innerHTML = h;
+}
+
+function renderWatch(){
+  $("#watch").innerHTML = WATCH.map(w => `
+    <div class="card pad wcard">
+      <div class="when">${w.when}</div>
+      <h3>${w.title}</h3>
+      <div class="parts">${w.parts}</div>
+      <p style="margin-top:8px">${w.body}</p>
+      <div class="do"><b>Buyer move</b>${w.act}</div>
+      <div class="src">Source: ${w.src.map(s => `<a href="${s[1]}" target="_blank" rel="noopener">${s[0]}</a>`).join(", ")}</div>
+    </div>`).join("");
+}
+
+/* ---------- drawing balloons ---------- */
+function renderBalloons(){
+  $("#balloons").innerHTML = Object.entries(BAL).map(([id, p]) => {
+    const b = byId(id);
+    const on = id === S.sel;
+    const ang = Math.atan2(p[3]-p[1], p[2]-p[0]);
+    const sx = p[0] + Math.cos(ang)*13, sy = p[1] + Math.sin(ang)*13;
+    return `<line class="leader" x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${p[2]}" y2="${p[3]}"/><circle cx="${p[2]}" cy="${p[3]}" r="2.2" fill="#15171c"/>
+      <g class="balloon ${on ? "on" : ""}" data-id="${id}" tabindex="0" role="button" aria-label="BOM item ${b.no}, ${b.name}">
+      <circle cx="${p[0]}" cy="${p[1]}" r="13"/><text x="${p[0]}" y="${p[1] + 4}" text-anchor="middle">${b.no}</text></g>`;
+  }).join("");
+}
+
+/* ---------- break-even ---------- */
+function renderBreakeven(){
+  const W = 580, H = 320, m = {l:58, r:18, t:14, b:42};
+  const w = W - m.l - m.r, h = H - m.t - m.b;
+  const vmin = 12, vmax = 1200, ymax = 1200;
+  const lx = v => m.l + (Math.log10(v) - Math.log10(vmin)) / (Math.log10(vmax) - Math.log10(vmin)) * w;
+  const ly = c => m.t + h - Math.min(c, ymax) / ymax * h;
+  const cost = (t, v) => t.unit + t.tool / (AMORT * v);
+  const V = S.rate * 12;
+  let g = "";
+  [0,300,600,900,1200].forEach(c => { g += `<line class="gridl" x1="${m.l}" x2="${m.l + w}" y1="${ly(c)}" y2="${ly(c)}"/><text x="${m.l - 8}" y="${ly(c) + 4}" text-anchor="end">€${c.toLocaleString("en-GB")}</text>`; });
+  [12,30,60,120,240,480,1200].forEach(v => { g += `<line class="gridl" y1="${m.t}" y2="${m.t + h}" x1="${lx(v)}" x2="${lx(v)}"/><text x="${lx(v)}" y="${m.t + h + 16}" text-anchor="middle">${v}</text>`; });
+  g += `<text x="${m.l + w/2}" y="${H - 6}" text-anchor="middle" fill="#434852">ROBOTS PER YEAR (LOG SCALE)</text>`;
+  let lines = "";
+  TECH.forEach(t => {
+    let d = "", started = false;
+    for (let i = 0; i <= 80; i++){
+      const v = vmin * Math.pow(vmax/vmin, i/80);
+      const c = cost(t, v);
+      if (c > ymax){ started = false; continue; }
+      d += (started ? "L" : "M") + lx(v).toFixed(1) + "," + ly(c).toFixed(1) + " ";
+      started = true;
+    }
+    lines += `<path d="${d}" fill="none" stroke="${t.col}" stroke-width="${t.k === "cnc" ? 2 : 2.6}" ${t.k === "cnc" ? 'stroke-dasharray="6 4"' : ""}/>`;
+    // direct labels where the lines are far apart
+    const at = {cnc:[vmax, -8, "end"], sheet:[14, -9, "start"], die:[55, 4, "start"]}[t.k];
+    const lxp = lx(at[0]) + (t.k === "die" ? 10 : t.k === "cnc" ? -4 : 0);
+    lines += `<text x="${lxp}" y="${ly(cost(t, at[0])) + at[1]}" text-anchor="${at[2]}" font-family="IBM Plex Sans" font-size="12" font-weight="600" fill="${t.col}" paint-order="stroke" stroke="#fbfaf7" stroke-width="4">${t.name}</text>`;
+  });
+  // crossover sheet vs die
+  const s = TECH[1], dc = TECH[2];
+  const vx = (dc.tool - s.tool) / AMORT / (s.unit - dc.unit);
+  lines += `<circle cx="${lx(vx)}" cy="${ly(cost(s, vx))}" r="5" fill="#fbfaf7" stroke="#15171c" stroke-width="1.8"/>
+    <text x="${lx(vx) + 8}" y="${ly(cost(s, vx)) + 22}" font-family="IBM Plex Mono" font-size="11" fill="#15171c" paint-order="stroke" stroke="#fbfaf7" stroke-width="4">break-even ${Math.round(vx)}/yr</text>`;
+  // current volume
+  lines += `<line x1="${lx(V)}" x2="${lx(V)}" y1="${m.t}" y2="${m.t + h}" stroke="#15171c" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <rect x="${lx(V) - 46}" y="${m.t + 2}" width="92" height="20" fill="#15171c"/>
+    <text x="${lx(V)}" y="${m.t + 16}" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#f4f2ec">plan ${V}/yr</text>`;
+  TECH.forEach(t => { const c = cost(t, V); if (c <= ymax) lines += `<circle cx="${lx(V)}" cy="${ly(c)}" r="4" fill="${t.col}" stroke="#fbfaf7" stroke-width="1.5"/>`; });
+  $("#be").innerHTML = `<g class="axis">${g}</g>${lines}`;
+
+  $("#opts").innerHTML = TECH.map(t => `<div><b><i class="sw" style="background:${t.col}"></i>${t.name}</b>${eur(t.unit)} a frame + ${t.tool ? eur(t.tool) + " tooling" : "no tooling"}<br><span class="muted">${t.lead}</span></div>`).join("");
+
+  const cs = cost(s, V), cd = cost(dc, V);
+  let v;
+  if (cs <= cd){
+    v = `<b>At ${V} robots a year, stay on sheet metal.</b> A die-cast frame would cost ${eur(cd - cs)} more per robot until the tool is paid off. Re-quote die-casting when the forecast passes about ${Math.round(vx)} a year, and ask R&D to keep the frame die-cast friendly now (even walls, draft angles) so the switch is cheap later.`;
+  } else {
+    v = `<b>At ${V} robots a year, the die-cast tool pays for itself.</b> It saves ${eur(cs - cd)} per robot, about ${eurK((cs - cd) * V)} a year after paying off the tool. Start the tool 20 weeks before the switch and keep sheet metal as the fallback during ramp-up.`;
+  }
+  $("#verdict").innerHTML = v;
+}
+
+/* ---------- scorecard ---------- */
+function renderScore(){
+  const totals = EMS.map(e => CRIT.reduce((a, c, i) => a + c.w[S.pre] * e.s[i], 0) / 100);
+  const best = totals.indexOf(Math.max(...totals));
+  const pips = n => `<span class="pips">${[1,2,3,4,5].map(i => `<i class="${i <= n ? "f" : ""}"></i>`).join("")}</span>`;
+  $("#score").innerHTML = `
+    <thead><tr><th>Criterion</th><th class="num">Weight</th>${EMS.map((e,i) => `<th class="${i === best ? "win" : ""}">${e.n}<br><span style="text-transform:none;letter-spacing:0">${e.d}</span></th>`).join("")}</tr></thead>
+    <tbody>${CRIT.map((c, ci) => `<tr><td>${c.n}</td><td class="num wt">${c.w[S.pre]}%</td>${EMS.map((e,i) => `<td class="${i === best ? "win" : ""}">${pips(e.s[ci])}</td>`).join("")}</tr>`).join("")}</tbody>
+    <tfoot><tr><td>Weighted score</td><td></td>${totals.map((t,i) => `<td class="tnum ${i === best ? "win" : ""}">${t.toFixed(2)}</td>`).join("")}</tr></tfoot>`;
+  const msg = {
+    speed:"During NPI, speed and engineering access win: EMS A next door turns a board revision in days, not weeks.",
+    bal:"Balanced, the local partner still wins. Its higher unit price is the cost of fast changes and short lines.",
+    cost:"Weighted for cost, the large Asian EMS wins. That is a volume decision, worth re-running once the design is frozen.",
+    sov:"Weighted for sovereignty, the European options lead. That matches building robots that depend less on the US and China."
+  };
+  $("#score-verdict").innerHTML = `<b>${EMS[best].n} wins on ${PRE[S.pre]}.</b> ${msg[S.pre]}`;
+}
+
+/* ---------- deal ---------- */
+function renderDeal(){
+  const yr = b => perRobot(b) * S.rate * 12;
+  const sum = ids => ids.reduce((a, id) => a + yr(byId(id)), 0);
+  const V = S.rate * 12;
+  const s = TECH[1], dc = TECH[2];
+  const dieSave = Math.max(0, (s.unit + s.tool/(AMORT*V)) - (dc.unit + dc.tool/(AMORT*V))) * V;
+  const L = [
+    {t:"One yearly LiDAR quote", d:"Pool the year's volume, with a second brand as leverage, 5% on item 6", v:sum(["lid"]) * .05},
+    {t:"Frame agreement on drive motors", d:"12 month forecast, monthly call-offs, 7% on item 4", v:sum(["mot"]) * .07},
+    {t:"One distributor for catalogue electronics", d:"Bundle items 5, 8, 9, 11, 16, 17, 18, 19 for 6%", v:sum(["drv","gns","imu","com","con","chg","est","hmi"]) * .06},
+    {t:"Battery pack at the 100 pack tier", d:"Supplier holds buffer, 7.7% on item 3 (see the prep card)", v:sum(["bat"]) * .077},
+    {t:"Second source for camera and ultrasonics", d:"Competition on items 7 and 10, 10%", v:sum(["cam","uss"]) * .10},
+    {t:"Design to cost on the harness", d:"Fewer connector types, standard lengths, 12% on item 15", v:sum(["har"]) * .12},
+    {t:"Die-cast frame above break-even", d:"From section 04, only when volume pays for the tool", v:dieSave},
+    {t:"Price hold on the compute module", d:"Avoids a further 15% rise on item 1. Cost avoidance, not savings", v:sum(["cmp"]) * .15, avoid:true}
+  ];
+  const max = Math.max(...L.map(l => l.v));
+  $("#levers").innerHTML = L.map(l => `<div class="lever">
+      <div><div class="lt1">${l.t}</div><div class="lt2">${l.d}</div></div>
+      <div class="bar"><i class="${l.avoid ? "avoid" : ""}" style="width:${max ? l.v/max*100 : 0}%"></i></div>
+      <div class="v ${l.v ? "" : "zero"}">${l.v ? eurK(l.v) : "€0"}</div></div>`).join("");
+  const total = L.filter(l => !l.avoid).reduce((a, l) => a + l.v, 0);
+  const spend = BOM.reduce((a,b) => a + yr(b), 0);
+  const target = spend * .04;
+  $("#deal-rate").textContent = S.rate + " robots a month";
+  $("#sav-total").textContent = eurK(total);
+  $("#sav-target").textContent = eurK(target);
+  const pct = total / spend * 100;
+  const scale = Math.max(total, target) * 1.15;
+  $("#target-bar i").style.width = (total/scale*100) + "%";
+  $("#target-bar b").style.left = (target/scale*100) + "%";
+  const avoid = L.find(l => l.avoid).v;
+  $("#sav-note").innerHTML = `${pct.toFixed(1)}% of ${eurK(spend)} yearly spend${total >= target ? ", above target" : ", short of target"}. Plus ${eurK(avoid)} of cost avoided on compute, and moving payment terms from 30 to 60 days would free about ${eurK(spend * 30/365)} of cash.`;
+}
+
+/* ---------- wiring ---------- */
+function syncSegs(){
+  document.querySelectorAll(".seg").forEach(seg => {
+    const k = seg.dataset.key;
+    seg.querySelectorAll("button").forEach(btn => btn.setAttribute("aria-pressed", String(String(S[k]) === btn.dataset.v)));
+  });
+}
+function renderAll(){
+  syncSegs(); renderKPIs(); renderBOM(); renderDetail(); renderReorder(); renderRadar(); renderBalloons(); renderBreakeven(); renderScore(); renderDeal();
+}
+function select(id){
+  if (!id || !byId(id)) return;
+  S.sel = id;
+  renderBOM(); renderDetail(); renderReorder(); renderRadar(); renderBalloons();
+}
+document.querySelectorAll(".seg").forEach(seg => seg.addEventListener("click", e => {
+  const btn = e.target.closest("button"); if (!btn) return;
+  const k = seg.dataset.key, v = btn.dataset.v;
+  S[k] = (k === "rate" || k === "sl") ? Number(v) : v;
+  renderAll();
+}));
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-id]");
+  if (!el || el.closest(".seg")) return;
+  select(el.dataset.id);
+  if (el.closest("#balloons")){
+    const d = document.getElementById("detail-bom");
+    if (window.innerWidth < 1040) d.scrollIntoView({behavior:"smooth", block:"start"});
+    else document.getElementById("bom").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const el = e.target.closest && e.target.closest("[data-id]");
+  if (!el) return;
+  e.preventDefault();
+  const host = el.closest("#balloons, #radar, #bom-table, #ro-table");
+  select(el.dataset.id);
+  const again = host && document.querySelector(`#${host.id} [data-id="${el.dataset.id}"]`);
+  if (again) again.focus();
+});
+
+renderWatch();
+renderAll();
+})();
+</script>
+</body>
+</html>
